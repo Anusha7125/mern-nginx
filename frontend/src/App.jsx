@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
+const API_BASE_URL = "https://q66-mern-backend.onrender.com";
+
 function App() {
   const [apiStatus, setApiStatus] = useState("Checking...");
   const [message, setMessage] = useState("Connecting to backend...");
@@ -11,30 +13,40 @@ function App() {
 
   async function loadItems() {
     try {
-      const response = await fetch("/api/items");
-      if (!response.ok) throw new Error("Unable to load items");
+      const response = await fetch(`${API_BASE_URL}/api/items`);
+
+      if (!response.ok) {
+        throw new Error("Unable to load items");
+      }
+
       const data = await response.json();
       setItems(data);
+      setError("");
     } catch {
-      setError("Could not load items.");
+      setError("Could not load items. Please check the backend connection.");
     }
   }
 
   useEffect(() => {
-    fetch("/api/health")
-      .then((response) => {
-        if (!response.ok) throw new Error("API unavailable");
-        return response.json();
-      })
-      .then((data) => {
+    async function checkBackend() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/health`);
+
+        if (!response.ok) {
+          throw new Error("API unavailable");
+        }
+
+        const data = await response.json();
+
         setApiStatus("Online");
         setMessage(data.message);
-      })
-      .catch(() => {
+      } catch {
         setApiStatus("Offline");
         setMessage("Backend connection unavailable");
-      });
+      }
+    }
 
+    checkBackend();
     loadItems();
   }, []);
 
@@ -43,10 +55,15 @@ function App() {
     setError("");
 
     try {
-      const response = await fetch("/api/items", {
+      const response = await fetch(`${API_BASE_URL}/api/items`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          description,
+        }),
       });
 
       const data = await response.json();
@@ -73,6 +90,7 @@ function App() {
             Monitor your application services in one place.
           </p>
         </div>
+
         <span className="stack-badge">MERN + Nginx</span>
       </header>
 
@@ -83,7 +101,11 @@ function App() {
             {apiStatus}
           </span>
         </div>
-        <h2>{apiStatus === "Online" ? "Service operational" : apiStatus}</h2>
+
+        <h2>
+          {apiStatus === "Online" ? "Service operational" : apiStatus}
+        </h2>
+
         <p>{message}</p>
       </section>
 
@@ -104,7 +126,7 @@ function App() {
 
         <article className="service-card">
           <span className="service-icon">DB</span>
-          <h3>MongoDB</h3>
+          <h3>MongoDB Atlas</h3>
           <p>Application data storage</p>
           <span className="service-label">Database</span>
         </article>
@@ -152,6 +174,7 @@ function App() {
                   <h3>{item.name}</h3>
                   <p>{item.description || "No description provided"}</p>
                 </div>
+
                 <span className="service-label">Saved</span>
               </article>
             ))
