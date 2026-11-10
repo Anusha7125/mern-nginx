@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
-const API_BASE_URL = "https://q66-mern-backend.onrender.com";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 function App() {
   const [apiStatus, setApiStatus] = useState("Checking...");
